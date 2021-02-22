@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------------
-# Copyright (c) 2020 by Enclustra GmbH, Switzerland.
+# Copyright (c) 2021 by Enclustra GmbH, Switzerland.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this hardware, software, firmware, and associated documentation files (the
@@ -46,25 +46,21 @@ switch $module_name {
     set part xczu4cg-fbvb900-1-e 
     set PS_DDR PS_D11E
     set PL_DDR PL_1_D11E
-    set Video_Codec None
   }
   ME-XU8-5EV-1I-D12E {
     set part xczu5ev-fbvb900-1-e 
     set PS_DDR PS_D12E
     set PL_DDR PL_2_D12E
-    set Video_Codec VCU
   }
   ME-XU8-7EV-1E-D11E {
     set part xczu7ev-fbvb900-1-e 
     set PS_DDR PS_D11E
     set PL_DDR PL_1_D11E
-    set Video_Codec VCU
   }
   ME-XU8-7EV-2I-D12E {
     set part xczu7ev-fbvb900-2-i 
     set PS_DDR PS_D12E
     set PL_DDR PL_2_D12E
-    set Video_Codec VCU
   }
   default {
     puts "$module_name not available"
