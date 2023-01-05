@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------------
-# Copyright (c) 2021 by Enclustra GmbH, Switzerland.
+# Copyright (c) 2022 by Enclustra GmbH, Switzerland.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this hardware, software, firmware, and associated documentation files (the
@@ -40,27 +40,28 @@ if {![info exists baseboard]}   {set baseboard ST1}
 if {[lindex $argv 0] != ""} { set module_name [lindex $argv 0] }
 
 set module Mercury_XU8
+set family zynqmp
 
 switch $module_name {
   ME-XU8-4CG-1E-D11E {
     set part xczu4cg-fbvb900-1-e 
     set PS_DDR PS_D11E
-    set PL_DDR PL_1_D11E
+    set PL_DDR 1GB_1066MHz
   }
   ME-XU8-5EV-1I-D12E {
-    set part xczu5ev-fbvb900-1-e 
+    set part xczu5ev-fbvb900-1-i 
     set PS_DDR PS_D12E
-    set PL_DDR PL_2_D12E
+    set PL_DDR 2GB_1200MHz
   }
   ME-XU8-7EV-1E-D11E {
     set part xczu7ev-fbvb900-1-e 
     set PS_DDR PS_D11E
-    set PL_DDR PL_1_D11E
+    set PL_DDR 1GB_1066MHz
   }
   ME-XU8-7EV-2I-D12E {
     set part xczu7ev-fbvb900-2-i 
     set PS_DDR PS_D12E
-    set PL_DDR PL_2_D12E
+    set PL_DDR 2GB_1200MHz
   }
   default {
     puts "$module_name not available"
@@ -73,7 +74,6 @@ if {![info exists project_name]} {
   set project_name ${module}
   if {[info exists baseboard]} {
     lappend project_name ${baseboard}
-    puts $project_name
   }
   set project_name [string map {" " "_"} "${project_name}"]
 }

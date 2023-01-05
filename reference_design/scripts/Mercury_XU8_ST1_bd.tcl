@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------------
-# Copyright (c) 2021 by Enclustra GmbH, Switzerland.
+# Copyright (c) 2022 by Enclustra GmbH, Switzerland.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this hardware, software, firmware, and associated documentation files (the
@@ -70,10 +70,7 @@ set_property -dict [ list \
   CONFIG.PSU_MIO_23_PULLUPDOWN {disable} \
 ] [get_bd_cells zynq_ultra_ps_e]
 
-create_bd_cell -type ip -vlnv xilinx.com:ip:system_management_wiz system_management_wiz
-set_property -dict [ list \
-  CONFIG.CHANNEL_ENABLE_VP_VN {false} \
-] [get_bd_cells system_management_wiz]
+create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset ps_sys_rst
 
 if { $PS_DDR == "PS_D11E"} {
   set_property -dict [ list \
@@ -103,17 +100,51 @@ if { $PS_DDR == "PS_D12E"} {
   ] [get_bd_cells zynq_ultra_ps_e]
 }
 
+if { $PS_DDR == "PS_D13E"} {
+  set_property -dict [ list \
+    CONFIG.PSU__DDRC__SPEED_BIN {DDR4_2400T} \
+    CONFIG.PSU__DDRC__CWL {12} \
+    CONFIG.PSU__DDRC__DEVICE_CAPACITY {8192 MBits} \
+    CONFIG.PSU__DDRC__DRAM_WIDTH {8 Bits} \
+    CONFIG.PSU__DDRC__ROW_ADDR_COUNT {16} \
+    CONFIG.PSU__DDRC__BG_ADDR_COUNT {2} \
+    CONFIG.PSU__DDRC__ECC {Enabled} \
+    CONFIG.PSU__DDRC__PARITY_ENABLE {1} \
+    CONFIG.PSU__DDRC__BUS_WIDTH {64 Bit} \
+  ] [get_bd_cells zynq_ultra_ps_e]
+}
+
+create_bd_cell -type ip -vlnv xilinx.com:ip:system_management_wiz system_management_wiz
+set_property -dict [ list \
+  CONFIG.TEMPERATURE_ALARM_OT_TRIGGER {85} \
+  CONFIG.CHANNEL_ENABLE_VP_VN {false} \
+] [get_bd_cells system_management_wiz]
+set_property -dict [ list \
+  CONFIG.PSU_MIO_13_PULLUPDOWN {disable} \
+  CONFIG.PSU_MIO_14_PULLUPDOWN {disable} \
+  CONFIG.PSU_MIO_15_PULLUPDOWN {disable} \
+  CONFIG.PSU_MIO_16_PULLUPDOWN {disable} \
+  CONFIG.PSU_MIO_17_PULLUPDOWN {disable} \
+  CONFIG.PSU_MIO_18_PULLUPDOWN {disable} \
+  CONFIG.PSU_MIO_19_PULLUPDOWN {disable} \
+  CONFIG.PSU_MIO_20_PULLUPDOWN {disable} \
+  CONFIG.PSU_MIO_21_PULLUPDOWN {disable} \
+  CONFIG.PSU__SD0__PERIPHERAL__IO {MIO 13 .. 22} \
+  CONFIG.PSU__SD0__DATA_TRANSFER_MODE {8Bit} \
+] [get_bd_cells zynq_ultra_ps_e]
+set_property -dict [ list \
+  CONFIG.PSU__I2C1__PERIPHERAL__ENABLE {1} \
+  CONFIG.PSU__I2C1__PERIPHERAL__IO {EMIO} \
+] [get_bd_cells zynq_ultra_ps_e]
+
 create_bd_cell -type ip -vlnv xilinx.com:ip:ddr4 ddr4
 
-create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect axi_interconnect_0
-set_property -dict [ list \
-  CONFIG.NUM_MI {1} \
-] [get_bd_cells axi_interconnect_0]
+create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset ddr4_sys_rst
 set_property -dict [ list \
   CONFIG.PSU__USE__M_AXI_GP0 {1} \
 ] [get_bd_cells zynq_ultra_ps_e]
 
-if { $PL_DDR == "PL_1_D11E"} {
+if { $PL_DDR == "1GB_1066MHz"} {
   set_property -dict [ list \
     CONFIG.C0.DDR4_TimePeriod {833} \
     CONFIG.C0.DDR4_InputClockPeriod {9996} \
@@ -124,7 +155,7 @@ if { $PL_DDR == "PL_1_D11E"} {
   ] [get_bd_cells ddr4]
 }
 
-if { $PL_DDR == "PL_2_D12E"} {
+if { $PL_DDR == "2GB_1200MHz"} {
   set_property -dict [ list \
     CONFIG.C0.DDR4_TimePeriod {833} \
     CONFIG.C0.DDR4_InputClockPeriod {9996} \
@@ -134,6 +165,22 @@ if { $PL_DDR == "PL_2_D12E"} {
     CONFIG.C0.DDR4_CasWriteLatency {12} \
   ] [get_bd_cells ddr4]
 }
+
+if { $PL_DDR == "4GB_1200MHz"} {
+  set_property -dict [ list \
+    CONFIG.C0.DDR4_TimePeriod {833} \
+    CONFIG.C0.DDR4_InputClockPeriod {9996} \
+    CONFIG.C0.DDR4_MemoryPart {MT40A1G16WBU-083E} \
+    CONFIG.C0.DDR4_DataWidth {32} \
+    CONFIG.C0.DDR4_CasLatency {17} \
+    CONFIG.C0.DDR4_CasWriteLatency {12} \
+  ] [get_bd_cells ddr4]
+}
+
+create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect axi_interconnect_0
+set_property -dict [ list \
+  CONFIG.NUM_MI {1} \
+] [get_bd_cells axi_interconnect_0]
 set_property -dict [ list \
   CONFIG.PSU__USB3_0__PERIPHERAL__ENABLE {1} \
   CONFIG.PSU__USB3_0__PERIPHERAL__IO {GT Lane2} \
@@ -141,29 +188,25 @@ set_property -dict [ list \
   CONFIG.PSU__USB0__REF_CLK_FREQ {100} \
 ] [get_bd_cells zynq_ultra_ps_e]
 
-create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect:1.0 smartconnect_0
-set_property -dict [list CONFIG.NUM_SI {1}] [get_bd_cells smartconnect_0]
-connect_bd_intf_net [get_bd_intf_pins zynq_ultra_ps_e/M_AXI_HPM0_LPD] [get_bd_intf_pins smartconnect_0/S00_AXI]
-connect_bd_intf_net [get_bd_intf_pins smartconnect_0/M00_AXI] [get_bd_intf_pins system_management_wiz/S_AXI_LITE]
-connect_bd_net [get_bd_pins smartconnect_0/aclk] [get_bd_pins zynq_ultra_ps_e/pl_clk0]
 connect_bd_net [get_bd_pins zynq_ultra_ps_e/maxihpm0_lpd_aclk] [get_bd_pins zynq_ultra_ps_e/pl_clk0]
-connect_bd_net [get_bd_pins system_management_wiz/s_axi_aclk] [get_bd_pins zynq_ultra_ps_e/pl_clk0]
-create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 ps_sys_rst
 connect_bd_net [get_bd_pins ps_sys_rst/slowest_sync_clk] [get_bd_pins zynq_ultra_ps_e/pl_clk0]
-connect_bd_net [get_bd_pins ps_sys_rst/peripheral_aresetn] [get_bd_pins system_management_wiz/s_axi_aresetn]
 connect_bd_net [get_bd_pins ps_sys_rst/ext_reset_in] [get_bd_pins zynq_ultra_ps_e/pl_resetn0]
-connect_bd_net [get_bd_pins ps_sys_rst/interconnect_aresetn] [get_bd_pins smartconnect_0/aresetn]
+set IIC_FPGA [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:iic_rtl:1.0 IIC_FPGA ]
+connect_bd_intf_net [get_bd_intf_ports IIC_FPGA] [get_bd_intf_pins zynq_ultra_ps_e/IIC_1]
 set_property generic BG_WIDTH=1 [current_fileset]
 set C0_SYS_CLK [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 C0_SYS_CLK ]
 connect_bd_intf_net [get_bd_intf_ports C0_SYS_CLK] [get_bd_intf_pins ddr4/C0_SYS_CLK]
 set C0_DDR4 [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:ddr4_rtl:1.0 C0_DDR4 ]
 connect_bd_intf_net [get_bd_intf_ports C0_DDR4] [get_bd_intf_pins ddr4/C0_DDR4]
-create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 ddr4_sys_rst
 connect_bd_net [get_bd_pins zynq_ultra_ps_e/maxihpm0_fpd_aclk] [get_bd_pins ddr4/c0_ddr4_ui_clk]
 connect_bd_net [get_bd_pins ddr4_sys_rst/ext_reset_in] [get_bd_pins zynq_ultra_ps_e/pl_resetn0]
 connect_bd_net [get_bd_pins ddr4_sys_rst/slowest_sync_clk] [get_bd_pins ddr4/c0_ddr4_ui_clk]
 connect_bd_net [get_bd_pins ddr4_sys_rst/peripheral_aresetn] [get_bd_pins ddr4/c0_ddr4_aresetn]
 connect_bd_net [get_bd_pins ddr4_sys_rst/peripheral_reset] [get_bd_pins ddr4/sys_rst]
+
+if { $PL_DDR == "4GB_1200MHz"} {
+  set_property generic BG_WIDTH=2 [current_fileset]
+}
 connect_bd_intf_net -boundary_type upper [get_bd_intf_pins axi_interconnect_0/S00_AXI] [get_bd_intf_pins zynq_ultra_ps_e/M_AXI_HPM0_FPD]
 connect_bd_intf_net -boundary_type upper [get_bd_intf_pins axi_interconnect_0/M00_AXI] [get_bd_intf_pins ddr4/C0_DDR4_S_AXI]
 connect_bd_net [get_bd_pins axi_interconnect_0/ACLK] [get_bd_pins axi_interconnect_0/S00_ACLK] -boundary_type upper
@@ -172,6 +215,16 @@ connect_bd_net [get_bd_pins axi_interconnect_0/ARESETN] [get_bd_pins axi_interco
 connect_bd_net [get_bd_pins axi_interconnect_0/S00_ARESETN] [get_bd_pins axi_interconnect_0/M00_ARESETN] -boundary_type upper
 connect_bd_net [get_bd_pins axi_interconnect_0/ACLK] [get_bd_pins ddr4/c0_ddr4_ui_clk]
 connect_bd_net [get_bd_pins axi_interconnect_0/M00_ARESETN] [get_bd_pins ddr4_sys_rst/interconnect_aresetn]
+
+create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect smartconnect_00
+set_property -dict [list CONFIG.NUM_MI {1} CONFIG.NUM_CLKS {1} CONFIG.NUM_SI {1}] [get_bd_cells smartconnect_00]
+connect_bd_intf_net [get_bd_intf_pins zynq_ultra_ps_e/M_AXI_HPM0_LPD] [get_bd_intf_pins smartconnect_00/S00_AXI]
+connect_bd_net [get_bd_pins zynq_ultra_ps_e/pl_clk0] [get_bd_pins smartconnect_00/aclk]
+connect_bd_net [get_bd_pins ps_sys_rst/interconnect_aresetn] [get_bd_pins smartconnect_00/aresetn]
+connect_bd_intf_net [get_bd_intf_pins smartconnect_00/M00_AXI ] [get_bd_intf_pins system_management_wiz/S_AXI_LITE]
+
+connect_bd_net [get_bd_pins ps_sys_rst/peripheral_aresetn] [get_bd_pins system_management_wiz/s_axi_aresetn]
+connect_bd_net [get_bd_pins zynq_ultra_ps_e/pl_clk0] [get_bd_pins system_management_wiz/s_axi_aclk]
 
 set DP_AUX_OUT [ create_bd_port -dir O DP_AUX_OUT]
 connect_bd_net [get_bd_ports DP_AUX_OUT] [get_bd_pins zynq_ultra_ps_e/dp_aux_data_out]
