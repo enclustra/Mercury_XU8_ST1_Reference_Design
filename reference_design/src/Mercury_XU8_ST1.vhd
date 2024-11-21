@@ -1,5 +1,5 @@
----------------------------------------------------------------------------------------------------
--- Copyright (c) 2022 by Enclustra GmbH, Switzerland.
+----------------------------------------------------------------------------------------------------
+-- Copyright (c) 2024 by Enclustra GmbH, Switzerland.
 --
 -- Permission is hereby granted, free of charge, to any person obtaining a copy of
 -- this hardware, software, firmware, and associated documentation files (the
@@ -17,18 +17,21 @@
 -- HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 -- OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 -- PRODUCT OR THE USE OR OTHER DEALINGS IN THE PRODUCT.
----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 -- libraries
----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
----------------------------------------------------------------------------------------------------
+library unisim;
+use unisim.vcomponents.all;
+
+----------------------------------------------------------------------------------------------------
 -- entity declaration
----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 entity Mercury_XU8_ST1 is
   generic (
     BG_WIDTH : natural
@@ -167,24 +170,24 @@ entity Mercury_XU8_ST1 is
     PL_LED2_N                      : out     std_logic;
     
     -- MIPI0
-    MIPI0_D0_N                     : inout   std_logic;
-    MIPI0_D0_P                     : inout   std_logic;
-    MIPI0_D1_N                     : inout   std_logic;
-    MIPI0_D1_P                     : inout   std_logic;
-    MIPI0_CLK_D0LP_N               : inout   std_logic;
-    MIPI0_CLK_D0LP_P               : inout   std_logic;
-    MIPI0_CLK_N                    : inout   std_logic;
-    MIPI0_CLK_P                    : inout   std_logic;
+    MIPI0_D0_N                     : in      std_logic;
+    MIPI0_D0_P                     : in      std_logic;
+    MIPI0_D1_N                     : in      std_logic;
+    MIPI0_D1_P                     : in      std_logic;
+    MIPI0_CLK_D0LP_N               : in      std_logic;
+    MIPI0_CLK_D0LP_P               : in      std_logic;
+    MIPI0_CLK_N                    : in      std_logic;
+    MIPI0_CLK_P                    : in      std_logic;
     
     -- MIPI1
-    MIPI1_D0_N                     : inout   std_logic;
-    MIPI1_D0_P                     : inout   std_logic;
-    MIPI1_D1_N                     : inout   std_logic;
-    MIPI1_D1_P                     : inout   std_logic;
-    MIPI1_CLK_D0LP_N               : inout   std_logic;
-    MIPI1_CLK_D0LP_P               : inout   std_logic;
-    MIPI1_CLK_N                    : inout   std_logic;
-    MIPI1_CLK_P                    : inout   std_logic;
+    MIPI1_D0_N                     : in      std_logic;
+    MIPI1_D0_P                     : in      std_logic;
+    MIPI1_D1_N                     : in      std_logic;
+    MIPI1_D1_P                     : in      std_logic;
+    MIPI1_CLK_D0LP_N               : in      std_logic;
+    MIPI1_CLK_D0LP_P               : in      std_logic;
+    MIPI1_CLK_N                    : in      std_logic;
+    MIPI1_CLK_P                    : in      std_logic;
     
     -- Oscillator 100 MHz
     CLK_100_CAL                    : in      std_logic;
@@ -217,9 +220,9 @@ end Mercury_XU8_ST1;
 
 architecture rtl of Mercury_XU8_ST1 is
 
-  ---------------------------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------------
   -- component declarations
-  ---------------------------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------------
   component Mercury_XU8 is
     port (
       DP_AUX_OUT          : out    std_logic;
@@ -254,6 +257,14 @@ architecture rtl of Mercury_XU8_ST1 is
     );
     
   end component Mercury_XU8;
+  component IBUFDS is
+      port (
+        O : out STD_LOGIC;
+        I : in STD_LOGIC;
+        IB : in STD_LOGIC
+      );
+    end component IBUFDS;
+  
   
   component IOBUF is
     port (
@@ -264,9 +275,9 @@ architecture rtl of Mercury_XU8_ST1 is
     );
   end component IOBUF;
 
-  ---------------------------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------------
   -- signal declarations
-  ---------------------------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------------
   signal Clk100           : std_logic;
   signal Clk50            : std_logic;
   signal Rst_N            : std_logic;
@@ -278,12 +289,16 @@ architecture rtl of Mercury_XU8_ST1 is
   signal IIC_FPGA_scl_t   : std_logic;
   signal dp_aux_data_oe_n : std_logic;
   signal LedCount         : unsigned(23 downto 0);
+  
+  ----------------------------------------------------------------------------------------------------
+  -- attribute declarations
+  ----------------------------------------------------------------------------------------------------
 
 begin
   
-  ---------------------------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------------
   -- processor system instance
-  ---------------------------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------------
   Mercury_XU8_i: component Mercury_XU8
     port map (
       DP_AUX_OUT           => DP_AUX_OUT,
@@ -317,6 +332,13 @@ begin
       C0_DDR4_dqs_t        => DDR4PL_DQS_P
     );
   
+  CLK_USR_buf: component IBUFDS
+  port map (
+  	O => open,
+  	I => CLK_USR_P,
+  	IB => CLK_USR_N
+  );
+  
   DP_AUX_OE <= not dp_aux_data_oe_n;
   
   IIC_FPGA_scl_iobuf: component IOBUF
@@ -334,7 +356,6 @@ begin
       O => IIC_FPGA_sda_i,
       T => IIC_FPGA_sda_t
     );
-  
   process (Clk50)
   begin
     if rising_edge (Clk50) then
@@ -346,5 +367,8 @@ begin
     end if;
   end process;
   PL_LED2_N <= '0' when LedCount(LedCount'high) = '0' else 'Z';
+  
+  LED2 <= 'Z';
+  LED3 <= 'Z';
   
 end rtl;

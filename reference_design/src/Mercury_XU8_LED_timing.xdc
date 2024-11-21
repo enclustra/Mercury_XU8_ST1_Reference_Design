@@ -1,1 +1,0 @@
-set_false_path -from [get_clocks clk_pl_1] -to [get_ports {PL_LED2_N}]
