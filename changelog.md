@@ -1,3 +1,9 @@
+## 2024.2_v1.2.3
+* Adjust PS reference clock frequency to remove rounding errors
+* Removed ME-XU8-5EV-1I-D12E, ME-XU8-7EV-1E-D11E and ME-XU8-7EG-2I-D11E product models
+* Remove component declarations for components provided by the unisim library
+* Add variable to disable PL DDR IP core instantiation
+
 ## 2024.1_v1.1.3
 * Add CLK_USR IOBUFDS instance to top level VHDL
 * Refactor documentation
